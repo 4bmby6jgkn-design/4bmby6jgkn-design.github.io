@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>E-Rate KY Library Dashboard – FY2025</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:   #0d1b2a;
+    --teal:   #00897b;
+    --teal-lt:#4db6ac;
+    --gold:   #f9a825;
+    --cream:  #f5f0e8;
+    --muted:  #b0bec5;
+    --panel:  #132236;
+    --border: #1e3448;
+    --text:   #e8edf2;
+    --text-sm:#8fa8bc;
+    --red:    #ef5350;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--panel);
+    border-bottom: 2px solid var(--teal);
+    padding: 1.4rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--cream);
+    letter-spacing: 0.01em;
+  }
+  .header-left p {
+    font-size: 0.78rem;
+    color: var(--text-sm);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 2px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--teal);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  #last-updated {
+    font-size: 0.72rem;
+    color: var(--text-sm);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── STATS STRIP ── */
+  .stats {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    flex: 1;
+    background: var(--panel);
+    padding: 1rem 1.4rem;
+    min-width: 140px;
+  }
+  .stat-label {
+    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    color: var(--teal-lt);
+    line-height: 1.1;
+    margin-top: 4px;
+  }
+  .stat-value.gold { color: var(--gold); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--panel);
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-label {
+    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  #search-input {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 3px;
+    width: 260px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #search-input:focus { border-color: var(--teal); }
+  #search-input::placeholder { color: var(--text-sm); }
+
+  /* column picker */
+  .col-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 780px;
+  }
+  .col-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 4px 10px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.73rem;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all 0.15s;
+    color: var(--text-sm);
+  }
+  .col-pill.active {
+    border-color: var(--teal);
+    background: rgba(0,137,123,0.15);
+    color: var(--teal-lt);
+  }
+  .col-pill input { display: none; }
+
+  /* ── TABLE AREA ── */
+  .table-wrap {
+    overflow-x: auto;
+    padding: 0 0 2rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  thead th {
+    background: var(--panel);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 2px solid var(--teal);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: sticky;
+    top: 0;
+  }
+  thead th:hover { color: var(--teal-lt); }
+  thead th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  thead th.sorted .sort-arrow { opacity: 1; color: var(--gold); }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: rgba(0,137,123,0.07); }
+  tbody td {
+    padding: 9px 14px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  tbody td.num { font-family: 'IBM Plex Mono', monospace; color: var(--teal-lt); }
+  tbody td.money { font-family: 'IBM Plex Mono', monospace; color: var(--gold); }
+
+  /* ── LOADING / ERROR ── */
+  #status {
+    padding: 3rem 2rem;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-sm);
+  }
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.8rem 2rem;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-sm);
+  }
+  .pg-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    transition: border-color 0.15s;
+  }
+  .pg-btn:disabled { opacity: 0.3; cursor: default; }
+  .pg-btn:not(:disabled):hover { border-color: var(--teal); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 1rem 2rem;
+    font-size: 0.7rem;
+    color: var(--text-sm);
+    font-family: 'IBM Plex Mono', monospace;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--teal-lt); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>E-Rate FY2025 — Kentucky Libraries</h1>
+    <p>USAC Form 471 Applicants · SODA2 Live Feed · srbr-2d59</p>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+    <span class="badge">Live Data</span>
+    <span id="last-updated">Loading…</span>
+  </div>
+</header>
+
+<div class="stats" id="stats-strip">
+  <div class="stat"><div class="stat-label">Applicants</div><div class="stat-value" id="s-count">—</div></div>
+  <div class="stat"><div class="stat-label">Total Funding Requested</div><div class="stat-value gold" id="s-total">—</div></div>
+  <div class="stat"><div class="stat-label">Avg Per Applicant</div><div class="stat-value" id="s-avg">—</div></div>
+  <div class="stat"><div class="stat-label">Counties Represented</div><div class="stat-value" id="s-counties">—</div></div>
+  <div class="stat"><div class="stat-label">Rows Shown</div><div class="stat-value" id="s-shown">—</div></div>
+</div>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Search</span>
+    <input id="search-input" type="text" placeholder="Filter by name, city, county…" oninput="applyFilters()" />
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Visible Columns <span style="color:var(--teal);font-size:0.65rem">(click to toggle)</span></span>
+    <div class="col-picker" id="col-picker"></div>
+  </div>
+</div>
+
+<div id="status"><span class="spinner"></span>Fetching data from USAC Open Data…</div>
+<div class="table-wrap" id="table-wrap" style="display:none">
+  <table id="main-table">
+    <thead id="thead-row"></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<div class="pagination" id="pagination" style="display:none">
+  <button class="pg-btn" id="pg-prev" onclick="changePage(-1)">← Prev</button>
+  <span id="pg-info"></span>
+  <button class="pg-btn" id="pg-next" onclick="changePage(1)">Next →</button>
+  <span style="margin-left:auto">Rows per page:
+    <select id="pg-size" onchange="changePageSize()" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:2px 6px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem">
+      <option value="20">20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="9999">All</option>
+    </select>
+  </span>
+</div>
+
+<footer>
+  Data source: <a href="https://opendata.usac.org/resource/srbr-2d59" target="_blank">USAC Open Data – srbr-2d59</a> · Filtered to FY2025, State=KY, Libraries &amp; Library Systems · Dashboard refreshes on page load.
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG — edit DATA_URL to change the query,
+   edit COLUMN_LABELS to rename or reorder columns
+   ───────────────────────────────────────────── */
+const DATA_URL =
+  "https://opendata.usac.org/resource/srbr-2d59.json" +
+  "?$query=SELECT%20*%20WHERE%20(upper(%60funding_year%60)%20LIKE%20'2025%25')" +
+  "%20AND%20(%60state%60%20%3D%20'KY')" +
+  "%20AND%20(%60organization_entity_type_name%60%20%3D%20'Library'" +
+  "%20OR%20%60organization_entity_type_name%60%20%3D%20'Library%20System')" +
+  "&$limit=5000";
+
+/* Friendly labels for known columns. Any column not listed here
+   will still appear but use its raw API field name.
+   Set a column's default visibility in the third element (true/false). */
+const COLUMN_CONFIG = [
+  // [ apiKey,                          label,                        defaultVisible ]
+  [ "ben",                              "BEN",                        false ],
+  [ "organization_name",               "Applicant Name",             true  ],
+  [ "organization_entity_type_name",   "Entity Type",                false ],
+  [ "city",                            "City",                       true  ],
+  [ "county",                          "County",                     true  ],
+  [ "state",                           "State",                      false ],
+  [ "zip_code",                        "ZIP",                        false ],
+  [ "funding_year",                    "Funding Year",               false ],
+  [ "application_number",              "Application #",              true  ],
+  [ "application_status",             "App Status",                 true  ],
+  [ "service_type_name",              "Service Type",               true  ],
+  [ "function_name",                  "Function",                   false ],
+  [ "purpose_name",                   "Purpose",                    false ],
+  [ "total_pre_discount_budget",      "Pre-Discount Total",         true  ],
+  [ "total_eligible_pre_discount_amt","Eligible Pre-Discount",      false ],
+  [ "discount_percentage",            "Discount %",                 true  ],
+  [ "total_funding_requested",        "Funding Requested",          true  ],
+  [ "total_funding_committed",        "Funding Committed",          false ],
+  [ "last_modified_date",             "Last Modified",              false ],
+];
+
+/* ── STATE ── */
+let allData = [];
+let filtered = [];
+let visibleCols = [];
+let sortKey = null;
+let sortDir = 1;
+let page = 1;
+let pageSize = 20;
+
+/* ── MONEY COLUMNS (render in gold with $ formatting) ── */
+const MONEY_KEYS = new Set([
+  "total_pre_discount_budget",
+  "total_eligible_pre_discount_amt",
+  "total_funding_requested",
+  "total_funding_committed",
+]);
+const NUM_KEYS = new Set(["discount_percentage", "funding_year", "ben"]);
+
+/* ── FETCH ── */
+async function loadData() {
+  try {
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    allData = await res.json();
+    document.getElementById("last-updated").textContent =
+      "Loaded " + new Date().toLocaleString();
+    initUI();
+  } catch (err) {
+    document.getElementById("status").innerHTML =
+      `<span style="color:var(--red)">⚠ Failed to load data: ${err.message}</span><br>
+       <small>Check the CORS settings on the USAC endpoint or run this page from a server.</small>`;
+  }
+}
+
+/* ── INIT ── */
+function initUI() {
+  /* discover all columns present in the data */
+  const allKeys = new Set();
+  allData.forEach(r => Object.keys(r).forEach(k => allKeys.add(k)));
+
+  /* build column list: configured cols first, then any extras */
+  const configured = COLUMN_CONFIG.map(([k, label, vis]) => ({
+    key: k, label, visible: vis && allKeys.has(k), configured: true
+  })).filter(c => allKeys.has(c.key));
+  const configuredKeys = new Set(COLUMN_CONFIG.map(c => c[0]));
+  const extras = [...allKeys]
+    .filter(k => !configuredKeys.has(k))
+    .map(k => ({ key: k, label: k, visible: false, configured: false }));
+
+  window._cols = [...configured, ...extras];
+  visibleCols = window._cols.filter(c => c.visible).map(c => c.key);
+
+  buildColPicker();
+  applyFilters();
+  document.getElementById("status").style.display = "none";
+  document.getElementById("table-wrap").style.display = "";
+  document.getElementById("pagination").style.display = "flex";
+}
+
+/* ── COLUMN PICKER ── */
+function buildColPicker() {
+  const picker = document.getElementById("col-picker");
+  picker.innerHTML = "";
+  window._cols.forEach(col => {
+    const pill = document.createElement("label");
+    pill.className = "col-pill" + (visibleCols.includes(col.key) ? " active" : "");
+    pill.innerHTML = `<input type="checkbox" ${visibleCols.includes(col.key) ? "checked" : ""}/>${col.label}`;
+    pill.addEventListener("click", () => {
+      const idx = visibleCols.indexOf(col.key);
+      if (idx > -1) { visibleCols.splice(idx, 1); pill.classList.remove("active"); }
+      else { visibleCols.push(col.key); pill.classList.add("active"); }
+      page = 1;
+      renderTable();
+    });
+    picker.appendChild(pill);
+  });
+}
+
+/* ── FILTER + SORT ── */
+function applyFilters() {
+  const q = document.getElementById("search-input").value.toLowerCase().trim();
+  filtered = allData.filter(row => {
+    if (!q) return true;
+    return Object.values(row).some(v => String(v).toLowerCase().includes(q));
+  });
+  if (sortKey) {
+    filtered.sort((a, b) => {
+      const av = a[sortKey] ?? "", bv = b[sortKey] ?? "";
+      const an = parseFloat(av), bn = parseFloat(bv);
+      if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+      return String(av).localeCompare(String(bv)) * sortDir;
+    });
+  }
+  page = 1;
+  updateStats();
+  renderTable();
+}
+
+/* ── STATS ── */
+function updateStats() {
+  document.getElementById("s-count").textContent = allData.length.toLocaleString();
+  document.getElementById("s-shown").textContent = filtered.length.toLocaleString();
+  const total = filtered.reduce((s, r) => s + (parseFloat(r.total_funding_requested) || 0), 0);
+  document.getElementById("s-total").textContent = fmtMoney(total);
+  document.getElementById("s-avg").textContent = filtered.length
+    ? fmtMoney(total / filtered.length) : "—";
+  const counties = new Set(filtered.map(r => r.county).filter(Boolean));
+  document.getElementById("s-counties").textContent = counties.size;
+}
+
+/* ── RENDER ── */
+function renderTable() {
+  const cols = window._cols.filter(c => visibleCols.includes(c.key));
+  const start = (page - 1) * pageSize;
+  const pageData = pageSize >= 9999 ? filtered : filtered.slice(start, start + pageSize);
+
+  /* thead */
+  const thead = document.getElementById("thead-row");
+  thead.innerHTML = "<tr>" + cols.map(c =>
+    `<th onclick="sortBy('${c.key}')" class="${sortKey===c.key?'sorted':''}">
+       ${c.label}<span class="sort-arrow">${sortKey===c.key?(sortDir===1?'↑':'↓'):'↕'}</span>
+     </th>`
+  ).join("") + "</tr>";
+
+  /* tbody */
+  const tbody = document.getElementById("tbody");
+  if (pageData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${cols.length}" style="padding:2rem;text-align:center;color:var(--text-sm)">No matching records.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = pageData.map(row =>
+    "<tr>" + cols.map(c => {
+      const val = row[c.key] ?? "";
+      if (MONEY_KEYS.has(c.key)) return `<td class="money">${val !== "" ? fmtMoney(parseFloat(val)) : "—"}</td>`;
+      if (NUM_KEYS.has(c.key)) return `<td class="num">${val}</td>`;
+      return `<td>${val}</td>`;
+    }).join("") + "</tr>"
+  ).join("");
+
+  /* pagination */
+  const total = filtered.length;
+  const totalPages = pageSize >= 9999 ? 1 : Math.ceil(total / pageSize);
+  document.getElementById("pg-info").textContent =
+    `Page ${page} of ${totalPages} (${total} rows)`;
+  document.getElementById("pg-prev").disabled = page <= 1;
+  document.getElementById("pg-next").disabled = page >= totalPages;
+}
+
+/* ── SORT ── */
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  applyFilters();
+}
+
+/* ── PAGINATION ── */
+function changePage(delta) { page += delta; renderTable(); }
+function changePageSize() {
+  pageSize = parseInt(document.getElementById("pg-size").value);
+  page = 1;
+  renderTable();
+}
+
+/* ── HELPERS ── */
+function fmtMoney(n) {
+  if (isNaN(n)) return "—";
+  if (n >= 1_000_000) return "$" + (n / 1_000_000).toFixed(2) + "M";
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+/* ── KICK OFF ── */
+loadData();
+</script>
+</body>
+</html>
