@@ -323,12 +323,7 @@
 
 /* The raw USAC SODA2 endpoint */
 const RAW_URL =
-  "https://opendata.usac.org/resource/srbr-2d59.json" +
-  "?$query=SELECT%20*%20WHERE%20(upper(%60funding_year%60)%20LIKE%20'2025%25')" +
-  "%20AND%20(%60state%60%20%3D%20'KY')" +
-  "%20AND%20(%60organization_entity_type_name%60%20%3D%20'Library'" +
-  "%20OR%20%60organization_entity_type_name%60%20%3D%20'Library%20System')" +
-  "&$limit=5000";
+  "https://opendata.usac.org/resource/srbr-2d59.json?$where=funding_year=2025 AND state='KY' AND (organization_entity_type_name='Library' OR organization_entity_type_name='Library System')";
 
 /* Free public CORS proxies — tried in order if direct fetch fails.
    corsproxy.io is reliable and well-maintained for public gov APIs. */
